@@ -1,0 +1,184 @@
+# Importamos los módulos necesarios
+import turtle  # Para la interfaz gráfica
+import time    # Para manejar el tiempo
+import random  # Para generar números aleatorios
+
+# Establecemos el tiempo de espera entre movimientos
+posponer = 0.1
+
+# Inicializamos el marcador y el puntaje máximo
+score = 0
+high_score = 0
+
+# Configuramos la ventana del juego
+window = turtle.Screen()
+window.title("Snakeer")
+window.bgcolor("black")
+window.setup(width=600, height=600)
+window.tracer(0)  # Desactivamos la actualización automática de la pantalla
+
+# Dibujamos la cabeza de la serpiente
+cabeza = turtle.Turtle()
+cabeza.speed(0)
+cabeza.shape("square")
+cabeza.color("white")
+cabeza.penup()
+cabeza.goto(0, 0)
+cabeza.direccion = "stop"  # Dirección inicial de la serpiente
+
+# Creamos la comida con un color aleatorio
+def generar_color_aleatorio():
+    return (random.random(), random.random(), random.random())
+
+comida = turtle.Turtle()
+comida.speed(0)
+comida.shape("circle")
+comida.color(generar_color_aleatorio())  # Generamos un color aleatorio
+comida.penup()
+comida.goto(0, 0)
+
+# Inicializamos la lista para almacenar los segmentos del cuerpo de la serpiente
+segmentos = []
+
+# Configuramos el texto del puntaje en la pantalla
+texto = turtle.Turtle()
+texto.speed(0)
+texto.color("white")
+texto.penup()
+texto.hideturtle()
+texto.goto(0, 260)
+texto.write("Score: 0   High Score: 0", align="center", font=("Courier", 24, "normal"))
+
+# Definimos las funciones para manejar el movimiento de la serpiente
+def arriba():
+    if cabeza.direccion != "down":
+        cabeza.direccion = "up"
+
+def abajo():
+    if cabeza.direccion != "up":
+        cabeza.direccion = "down"
+
+def izquierda():
+    if cabeza.direccion != "right":
+        cabeza.direccion = "left"
+
+def derecha():
+    if cabeza.direccion != "left":
+        cabeza.direccion = "right"
+
+def mov():
+    if cabeza.direccion == "up":
+        y = cabeza.ycor()
+        cabeza.sety(y + 20)
+
+    if cabeza.direccion == "down":
+        y = cabeza.ycor()
+        cabeza.sety(y - 20)
+
+    if cabeza.direccion == "left":
+        x = cabeza.xcor()
+        cabeza.setx(x - 20)
+
+    if cabeza.direccion == "right":
+        x = cabeza.xcor()
+        cabeza.setx(x + 20)
+
+# Configuramos las teclas para manejar el movimiento de la serpiente
+window.listen()
+window.onkeypress(arriba, "Up")
+window.onkeypress(abajo, "Down")
+window.onkeypress(izquierda, "Left")
+window.onkeypress(derecha, "Right")
+
+# Definimos la función para cerrar la ventana del juego
+def salir():
+    window.bye()
+
+# Enlazamos el evento de cierre de la ventana
+window.onkeypress(salir, "q")
+
+# Bucle principal del juego
+while True:
+    window.update()  # Actualizamos la ventana
+
+    # Verificamos las colisiones con los bordes de la pantalla
+    if cabeza.xcor() > 280 or cabeza.xcor() < -280 or cabeza.ycor() > 280 or cabeza.ycor() < -280:
+        time.sleep(1)
+        cabeza.goto(0, 0)
+        cabeza.direction = "stop"
+
+        # Escondemos los segmentos del cuerpo
+        for segmento in segmentos:
+            segmento.goto(1000, 1000)
+
+        # Limpiamos la lista de segmentos
+        segmentos.clear()
+
+        # Reseteamos el marcador
+        score = 0
+        texto.clear()
+        texto.write("Score: {}   High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
+
+    # Verificamos las colisiones con la comida
+    if cabeza.distance(comida) < 20:
+        # Movemos la comida a una posición aleatoria
+        x = random.randint(-280, 280)
+        y = random.randint(-280, 280)
+        comida.goto(x, y)
+
+        # Cambiamos el color de la comida a un color aleatorio
+        comida.color(generar_color_aleatorio())
+
+        # Agregamos un nuevo segmento a la serpiente
+        nuevo_segmento = turtle.Turtle()
+        nuevo_segmento.speed(0)
+        nuevo_segmento.shape("square")
+        nuevo_segmento.color("grey")
+        nuevo_segmento.penup()
+        segmentos.append(nuevo_segmento)
+
+        # Incrementamos el puntaje
+        score += 10
+        if score > high_score:
+            high_score = score
+
+        # Actualizamos el marcador
+        texto.clear()
+        texto.write("Score: {}   High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
+
+    # Verificamos las colisiones con el cuerpo de la serpiente
+    for segmento in segmentos:
+        if cabeza.distance(segmento) < 20:
+            time.sleep(1)
+            cabeza.goto(0, 0)
+            cabeza.direction = "stop"
+
+            # Escondemos los segmentos del cuerpo
+            for segmento in segmentos:
+                segmento.goto(1000, 1000)
+
+            # Limpiamos la lista de segmentos
+            segmentos.clear()
+
+            # Reseteamos el marcador
+            score = 0
+            texto.clear()
+            texto.write("Score: {}   High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
+
+    # Movemos el cuerpo de la serpiente
+    totalSeg = len(segmentos)
+    for index in range(totalSeg - 1, 0, -1):
+        x = segmentos[index - 1].xcor()
+        y = segmentos[index - 1].ycor()
+        segmentos[index].goto(x, y)
+
+    if totalSeg > 0:
+        x = cabeza.xcor()
+        y = cabeza.ycor()
+        segmentos[0].goto(x, y)
+
+    # Movemos la cabeza de la serpiente
+    mov()
+
+    # Esperamos un tiempo antes de la próxima actualización
+    time.sleep(posponer)
